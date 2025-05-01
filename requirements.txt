@@ -1,0 +1,17 @@
+streamlit
+torch
+transformers
+sentence-transformers  # For CLIP and embedding models
+openai            # If using GPT-based LLMs
+Pillow           # For image processing
+numpy
+pandas
+
+datasets
+tqdm
+jupyterlab_widgets
+matplotlib
+numpy
+scikit-learn    
+pandas
+scipy
