@@ -1,0 +1,58 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VSCode settings
+.vscode/
+
+# MacOS system files
+.DS_Store
+
+# Environment variables and secrets
+.env
+*.env
+*.toml
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Data artifacts
+data/processed/
+data/embeddings/
+
+# Model checkpoints
+models/clip/checkpoints/
+models/llm/checkpoints/
+
+# Docker artifacts
+*.dockerfile
+*.tar
+*.img
+
+# Streamlit cache
+.streamlit/
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+coverage.xml
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Notebook outputs (optional)
+notebooks/*.ipynb
