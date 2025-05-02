@@ -1,3 +1,4 @@
+
 model:
   name: openai/clip-vit-base-patch32
 
@@ -10,6 +11,9 @@ training:
   epochs: 3
   learning_rate: 5e-5
   save_path: models/clip/fine_tuned
+
+embeddings:
+  save_dir: data/embeddings
 
 preprocessing:
   image_size: 224
