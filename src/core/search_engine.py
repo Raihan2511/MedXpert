@@ -22,8 +22,11 @@ model = CLIPModel.from_pretrained(MODEL_PATH).to(device).eval()
 processor = CLIPProcessor.from_pretrained(MODEL_PATH)
 
 # Load embeddings
-image_embeddings = torch.load(os.path.join(EMBED_PATH, "train_image.pt"))
-text_embeddings = torch.load(os.path.join(EMBED_PATH, "train_text.pt"))
+# image_embeddings = torch.load(os.path.join(EMBED_PATH, "train_image.pt"))
+# text_embeddings = torch.load(os.path.join(EMBED_PATH, "train_text.pt"))
+image_embeddings = torch.load(os.path.join(EMBED_PATH, "train_image.pt")).to(device)
+text_embeddings = torch.load(os.path.join(EMBED_PATH, "train_text.pt")).to(device)
+
 
 # Cosine similarity search
 def search_text_by_image(query_image: Image.Image, k=5):

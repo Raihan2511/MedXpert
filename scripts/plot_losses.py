@@ -1,12 +1,10 @@
-# scripts/plot_losses.py
-
 import argparse
 import matplotlib.pyplot as plt
 import os
 
+# Argument parser for history file
 parser = argparse.ArgumentParser()
-parser.add_argument("history_file", help="path to training history TSV file")
-parser.add_argument("--save_to", "-s", help="path to save figure (optional)")
+parser.add_argument("history_file", help="Path to training history TSV file")
 args = parser.parse_args()
 
 # Lists to store parsed values
@@ -41,10 +39,8 @@ plt.title("Validation Accuracy")
 
 plt.tight_layout()
 
-# Save or show
-if args.save_to:
-    os.makedirs(os.path.dirname(args.save_to), exist_ok=True)
-    plt.savefig(args.save_to)
-    print(f"✅ Plot saved to {args.save_to}")
-else:
-    plt.show()
+# Save to file
+save_path = "results/plots/loss_plot.png"
+os.makedirs(os.path.dirname(save_path), exist_ok=True)
+plt.savefig(save_path)
+print(f"✅ Plot saved to {save_path}")

@@ -31,8 +31,9 @@ data/processed/
 data/embeddings/
 
 # Model checkpoints
-models/clip/checkpoints/
-models/llm/checkpoints/
+
+# models/clip/checkpoints/
+# models/llm/checkpoints/
 
 # Docker artifacts
 *.dockerfile
@@ -40,7 +41,7 @@ models/llm/checkpoints/
 *.img
 
 # Streamlit cache
-.streamlit/
+# .streamlit/
 
 # Pytest cache
 .pytest_cache/
@@ -55,4 +56,4 @@ dist/
 *.egg-info/
 
 # Notebook outputs (optional)
-notebooks/*.ipynb
+# notebooks/*.ipynb
