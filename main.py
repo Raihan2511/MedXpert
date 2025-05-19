@@ -350,7 +350,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from datetime import timedelta
 from torch.nn.utils import clip_grad_norm_
-# from models.clip.dataset import CLIPDataset
+from models.clip.dataset import CLIPDataset
 from models.clip.dataset import ProcessedCLIPDataset
 from transformers import get_linear_schedule_with_warmup
 from transformers import get_scheduler
@@ -392,54 +392,55 @@ def main():
     print(f"Loading dataset: {DATASET_NAME}")
     dataset = load_dataset(DATASET_NAME)
 
-    # if "validation" not in dataset or "test" not in dataset:
-    #     print("\n🔀 Splitting dataset into 85% train / 10% val / 5% test...")
-    #     dataset["train"] = dataset["train"].shuffle(seed=42)
-    #     total = len(dataset["train"])
-    #     train_end = int(0.85 * total)
-    #     val_end = train_end + int(0.10 * total)
+    if "validation" not in dataset or "test" not in dataset:
+        print("\n🔀 Splitting dataset into 85% train / 10% val / 5% test...")
+        dataset["train"] = dataset["train"].shuffle(seed=42)
+        total = len(dataset["train"])
+        train_end = int(0.85 * total)
+        val_end = train_end + int(0.10 * total)
 
-    #     dataset["validation"] = dataset["train"].select(range(train_end, val_end))
-    #     dataset["test"] = dataset["train"].select(range(val_end, total))
-    #     dataset["train"] = dataset["train"].select(range(0, train_end))
+        dataset["validation"] = dataset["train"].select(range(train_end, val_end))
+        dataset["test"] = dataset["train"].select(range(val_end, total))
+        dataset["train"] = dataset["train"].select(range(0, train_end))
 
-    # total = len(dataset["train"]) + len(dataset["validation"]) + len(dataset["test"])
+    total = len(dataset["train"]) + len(dataset["validation"]) + len(dataset["test"])
+    print("\n##############################################################################################")
+    print(f"✅ Dataset split summary:")
+    print(f"  Train: {len(dataset['train'])} samples ({len(dataset['train']) / total * 100:.2f}%)")
+    print(f"  Val:   {len(dataset['validation'])} samples ({len(dataset['validation']) / total * 100:.2f}%)")
+    print(f"  Test:  {len(dataset['test'])} samples ({len(dataset['test']) / total * 100:.2f}%)")
+    print("\n##############################################################################################")
+    # print("Preprocessing dataset...")
+    # data_dir = "data/processed"
+    # preprocess_dataset(dataset, output_dir="data/processed")
+    # print("Data preprocessing complete")
+    # print("\n*******************************************\n")
+    # print("Loading preprocessed dataset...")
+
     # print("\n##############################################################################################")
     # print(f"✅ Dataset split summary:")
     # print(f"  Train: {len(dataset['train'])} samples ({len(dataset['train']) / total * 100:.2f}%)")
     # print(f"  Val:   {len(dataset['validation'])} samples ({len(dataset['validation']) / total * 100:.2f}%)")
     # print(f"  Test:  {len(dataset['test'])} samples ({len(dataset['test']) / total * 100:.2f}%)")
     # print("\n##############################################################################################")
-    print("Preprocessing dataset...")
-    data_dir = "data/processed"
-    preprocess_dataset(dataset, output_dir="data/processed")
-    print("Data preprocessing complete")
-    print("\n*******************************************\n")
-    print("Loading preprocessed dataset...")
 
-    # print("\n##############################################################################################")
-    # print(f"✅ Dataset split summary:")
-    # print(f"  Train: {len(dataset['train'])} samples ({len(dataset['train']) / total * 100:.2f}%)")
-    # print(f"  Val:   {len(dataset['validation'])} samples ({len(dataset['validation']) / total * 100:.2f}%)")
-    # print(f"  Test:  {len(dataset['test'])} samples ({len(dataset['test']) / total * 100:.2f}%)")
-    # print("\n##############################################################################################")
+    train_dataset = CLIPDataset(dataset["train"])
+    val_dataset = CLIPDataset(dataset["validation"])
+    test_dataset = CLIPDataset(dataset["test"])
 
-    # train_dataset = CLIPDataset(dataset["train"])
-    # val_dataset = CLIPDataset(dataset["validation"])
-    # test_dataset = CLIPDataset(dataset["test"])
-    train_dataset = ProcessedCLIPDataset(
-        json_path="data/processed/texts/train.json", 
-        root_dir="data/processed",
-        # transform=train_transforms  # Apply training transforms
-    )
-    val_dataset = ProcessedCLIPDataset(
-        json_path="data/processed/texts/validation.json", 
-        root_dir="data/processed",
-    )
-    test_dataset = ProcessedCLIPDataset(
-        json_path="data/processed/texts/test.json", 
-        root_dir="data/processed",
-    )
+    # train_dataset = ProcessedCLIPDataset(
+    #     json_path="data/processed/texts/train.json", 
+    #     root_dir="data/processed",
+    #     # transform=train_transforms  # Apply training transforms
+    # )
+    # val_dataset = ProcessedCLIPDataset(
+    #     json_path="data/processed/texts/validation.json", 
+    #     root_dir="data/processed",
+    # )
+    # test_dataset = ProcessedCLIPDataset(
+    #     json_path="data/processed/texts/test.json", 
+    #     root_dir="data/processed",
+    # )
     print(f"Dataset sizes: Train={len(train_dataset)}, Val={len(val_dataset)}, Test={len(test_dataset)}")
     print("\n*******************************************\n")
     custom_collate = lambda batch: clip_collate_fn(batch, processor)

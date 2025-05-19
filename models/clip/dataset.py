@@ -342,36 +342,36 @@ import torch
 # from PIL import Image
 # import torch
 
-# class ProcessedCLIPDataset(torch.utils.data.Dataset):
-#     def __init__(self, json_path, root_dir):
-#         """
-#         Args:
-#             json_path (str): Path to the JSON file with annotations
-#             root_dir (str): Root directory containing the images
-#         """
-#         with open(json_path, 'r') as f:
-#             self.data = json.load(f)
-#         self.root_dir = root_dir
+class ProcessedCLIPDataset(torch.utils.data.Dataset):
+    def __init__(self, json_path, root_dir):
+        """
+        Args:
+            json_path (str): Path to the JSON file with annotations
+            root_dir (str): Root directory containing the images
+        """
+        with open(json_path, 'r') as f:
+            self.data = json.load(f)
+        self.root_dir = root_dir
 
-#     def __len__(self):
-#         return len(self.data)
+    def __len__(self):
+        return len(self.data)
 
-#     def __getitem__(self, idx):
-#         item = self.data[idx]
-#         image_path = os.path.join(self.root_dir, item['image_path'])
+    def __getitem__(self, idx):
+        item = self.data[idx]
+        image_path = os.path.join(self.root_dir, item['image_path'])
 
-#         try:
-#             image = Image.open(image_path)
-#             if image.mode != "RGB":
-#                 image = image.convert("RGB")
-#         except Exception as e:
-#             raise FileNotFoundError(f"Failed to load image at {image_path}: {e}")
+        try:
+            image = Image.open(image_path)
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+        except Exception as e:
+            raise FileNotFoundError(f"Failed to load image at {image_path}: {e}")
 
-#         return {
-#             "image": image,
-#             "text": item['text'],
-#             "image_id": item['image_id']
-#         }
+        return {
+            "image": image,
+            "text": item['text'],
+            "image_id": item['image_id']
+        }
 
 class CLIPDataset(torch.utils.data.Dataset):
     def __init__(self, hf_dataset):
