@@ -59,4 +59,19 @@ dist/
 *.egg-info/
 
 # Notebook outputs (optional)
-# notebooks/*.ipynb
+notebooks/*.pt
+notebooks/*.pth
+notebooks/*.json
+notebooks/roco_test_80/*.arrow
+notebooks/roco_train_80/*.json
+notebooks/roco_train_80/*.arrow
+notebooks/roco_val_80/*.json
+notebooks/roco_val_80/*.arrow
+notebooks/roco_test_80/*.json
+
+
+results/fine_tuned/*.json
+results/fine_tuned/.*pt
+results/fine_tuned/*.safetensors
+results/fine_tuned/*.txt
+
