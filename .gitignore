@@ -30,10 +30,13 @@ __pycache__/
 data/processed/
 data/embeddings/
 
-# Model checkpoints
 
-# models/clip/checkpoints/
-# models/llm/checkpoints/
+# Model checkpoints
+models/clip/fine_tuned
+models/clip/embeddings/
+
+models/clip/checkpoints/
+models/llm/checkpoints/
 
 # Docker artifacts
 *.dockerfile
