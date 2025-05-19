@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 # Add parent directory to path to find modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from models.clip.dataset import CLIPDataset
+from models.clip.dataset import ProcessedCLIPDataset
 
 # Load config file
 script_dir = os.path.dirname(os.path.abspath(__file__))

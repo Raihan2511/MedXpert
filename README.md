@@ -1,200 +1,245 @@
-# 😺 MedXpert: Medical Visual Question Answering + Diagnosis Assistant
+😺 MedXpert: Medical Visual Question Answering + Diagnosis Assistant
+MedXpert is a full-stack medical AI assistant designed for diagnostic support through advanced image-text retrieval and report generation. It combines a fine-tuned CLIP model trained on domain-specific medical data, BLIP for intelligent image captioning, and Gemini AI (LLM) to transform visual and textual insights into structured diagnostic reports.
 
-MedXpert is a full-stack medical AI assistant designed for diagnostic support through image-text retrieval and report generation. It integrates a **fine-tuned CLIP model** trained on a domain-specific dataset for accurate visual-language alignment, **BLIP for image captioning**, and **Gemini AI (LLM)** for converting those insights into structured diagnostic reports.
+Show Image
 
----
+🔍 System Overview
+MedXpert enables accurate and interactive medical diagnosis support through:
 
-## 🧠 System Objective
+Multi-modal input: Upload X-ray images or enter natural language queries
+Intelligent retrieval: Find similar cases through domain-adapted embeddings
+Automated interpretation: Generate captions and diagnostic insights
+Structured reporting: Create comprehensive medical reports with findings and impressions
+🧠 Technical Architecture
+Core Components
+MedXpert integrates three powerful AI systems:
 
-Enable accurate and interactive medical diagnosis support by allowing users to input:
+Fine-tuned CLIP: Domain-adapted visual-language alignment model
+BLIP: Medical image captioning system
+Gemini AI: Large language model for structured report generation
+System Pipeline
+mermaid
+flowchart TD
+    U[User Input<br>X-ray or Query] -->|Embedding| CLIP[Fine-Tuned CLIP Encoder]
+    CLIP --> RETRIEVE[Similarity Search<br>Top-K Retrieval]
+    U -->|If image| BLIP[BLIP Caption Generator]
+    RETRIEVE --> LLM[Gemini AI]
+    BLIP --> LLM
+    LLM --> REPORT[Structured Diagnosis Report]
+    REPORT --> UI[Streamlit Frontend]
+🔬 Understanding CLIP & Domain Adaptation
+Why Fine-Tune CLIP?
+CLIP (Contrastive Language–Image Pretraining) creates a unified embedding space for images and text through contrastive learning. While powerful for general visual understanding, the standard CLIP model lacks domain expertise for medical diagnostics.
 
-* A **medical image** (e.g., chest X-ray), or
-* A **free-text query** (e.g., "Find signs of pneumonia")
+The zero-shot CLIP model trained on general internet data fails to capture specialized medical features like:
 
-... and receive:
+Subtle X-ray shadows
+Domain-specific terminology (e.g., "consolidation", "cardiomegaly")
+Radiological patterns specific to different conditions
+Through fine-tuning on the MIMIC-CXR dataset, we adapt CLIP's representation space to the medical domain, significantly improving retrieval accuracy for diagnostic tasks.
 
-* Top-K similar matches (images/text)
-* Captioned interpretations
-* Summarized diagnostic reports
+Fine-Tuning Process
+Dataset: MIMIC-CXR
+We utilized the comprehensive MIMIC-CXR dataset containing:
 
----
+Images: 377,110 chest X-rays
+Reports: 227,827 free-text radiology reports
+Labels: 14 diagnostic categories (Atelectasis, Effusion, etc.)
+Training Configuration
+Base Model: openai/clip-vit-base-patch32
+Dataset: itsanmolgupta/mimic-cxr-dataset
+Final Dataset Used:
+Train: 24,499 samples
+Validation: 3,062 samples
+Test: 3,062 samples
+Features: image, findings, impression
+Training Parameters:
+Batch size: 16
+Epochs: 3
+Learning rate: 5e-6
+Optimizer: AdamW
+Early layers: Frozen to retain general vision features
+Contrastive Learning Approach
+Our fine-tuning employs symmetric contrastive loss:
 
-## 🔍 Understanding CLIP & Why We Fine-Tune It
+Positive (image-report) pairs are pulled together in embedding space
+Negative pairs are pushed apart using cosine similarity distance
+Performance tracked via Recall@K metrics
+📊 Performance Improvement
+Domain adaptation through fine-tuning dramatically improves retrieval performance:
 
-CLIP (Contrastive Language–Image Pretraining) learns to match images with their corresponding text by projecting both into a shared embedding space.
+Metric	Zero-Shot CLIP	Fine-Tuned CLIP
+Recall@1	12.4%	34.7%
+Recall@5	28.1%	61.2%
+Recall@10	41.5%	75.9%
+🔮 Report Generation Workflow
+MedXpert's end-to-end pipeline for diagnosis assistance:
 
-However, the **zero-shot CLIP model trained on general internet data** fails to capture domain-specific features like X-ray shadows or terms like "consolidation" or "cardiomegaly." Hence, **we fine-tune CLIP using a medical dataset** to adapt its image-text alignment capability to the medical domain.
-
-### 🧪 Fine-Tuning CLIP on a Custom Dataset
-
-We used the **MIMIC-CXR dataset** containing chest X-ray images and associated clinical reports. The fine-tuning process involved:
-
-1. **Data Preparation**
-
-   * Cleaning and filtering 20k+ image-report pairs
-   * Normalizing image dimensions
-   * Cleaning text (removing stopwords, anonymization tags, etc.)
-
-2. **Contrastive Training Setup**
-
-   * Images processed using the CLIP Vision Encoder
-   * Text reports encoded via CLIP Text Encoder
-   * A contrastive loss (InfoNCE) was used to **maximize similarity between matched image-text pairs** and **minimize non-matching pairs**
-
-3. **Hyperparameters**
-
-   * Batch size: 256
-   * Optimizer: AdamW
-   * Learning rate: 1e-5
-   * Epochs: 10
-
-4. **Checkpointing**
-
-   * Fine-tuned weights saved to `models/clip/fine_tuned/`
-   * Embeddings for each split stored under `data/embeddings/`
-
-After fine-tuning, the CLIP model could perform **domain-specific image-text retrieval** with significantly improved recall rates.
-
----
-
-## 🔧 System Pipeline and Report Generation Workflow
-
-Here is the overall process MedXpert follows:
-
-### 🔄 Workflow Architecture
-
-```mermaid
-graph TD
-    A[User Input: X-ray / Query] --> B[CLIP: Generate Embedding]
-    B --> C[Similarity Search: Top-K Results]
-    A --> D[BLIP: Caption Generation]
-    C --> E[Gemini LLM: Summarize Results]
-    D --> E
-    E --> F[Final Diagnostic Report]
-    F --> G[Frontend Display]
-```
-
----
-
-## 🚀 Key Features
-
-### ✅ Image–Text Alignment
-
-* Fine-tuned CLIP improves image-text similarity metrics
-* Supports both image-to-text and text-to-image search
-
-### ✅ Diagnostic Captioning
-
-* BLIP adds human-readable context to the image
-
-### ✅ Report Summarization
-
-* Gemini AI transforms the information into actionable diagnosis with potential codes and suggestions
-
-### ✅ Visual Interface
-
-* Streamlit UI for accessibility by radiologists and clinicians
-
----
-
-## 🧪 Dataset: MIMIC-CXR
-
-* **Images:** 377,110 chest X-rays
-* **Reports:** 227,827 associated free-text reports
-* **Labels:** 14 diagnostic categories (e.g., Atelectasis, Effusion)
-* **Split:** 70% train, 15% val, 15% test
-
----
-
-## 📊 Performance: Fine-Tuned vs Zero-Shot CLIP
-
-| Metric     | Zero-Shot CLIP | Fine-Tuned CLIP |
-| ---------- | -------------- | --------------- |
-| Recall\@1  | 12.4%          | 34.7%           |
-| Recall\@5  | 28.1%          | 61.2%           |
-| Recall\@10 | 41.5%          | 75.9%           |
-
----
-
-## 🔧 How to Use MedXpert
-
-### Step 1 — Setup
-
-```bash
+Input Processing:
+Image input → CLIP embedding + BLIP captioning
+Text query → CLIP text embedding
+Similarity Search:
+Cosine similarity computation across embedding database
+Top-K retrieval of most relevant cases
+Report Generation:
+BLIP captions provide interpretable descriptions
+Retrieved similar cases provide context
+Gemini AI synthesizes findings into structured report
+Format includes findings, impressions, and potential diagnosis
+🚀 Key Features
+✅ Intelligent Image-Text Alignment
+Domain-specific understanding of medical images and reports
+Bidirectional search (image→text, text→image)
+✅ Diagnostic Captioning
+Automatic generation of radiological observations
+Human-readable interpretations of visual features
+✅ Comprehensive Report Generation
+Structured diagnostic findings
+Clinical impressions and potential diagnoses
+(Planned) ICD-10 code suggestion
+✅ Interactive User Interface
+Streamlit-based web application
+Visual result exploration
+Support for image upload and text queries
+🔧 Installation & Setup
+Prerequisites
+Python 3.8+
+PyTorch 1.9+
+CUDA-compatible GPU (recommended)
+Step 1: Clone Repository
+bash
 git clone https://github.com/yourname/medxpert.git
 cd medxpert
+Step 2: Create Virtual Environment
+bash
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+Step 3: Install Dependencies
+bash
 pip install -r requirements.txt
-```
+📚 Usage Guide
+🔹 STEP 1 — Train CLIP + Generate Embeddings
+Fine-tune CLIP and save embeddings:
 
-### Step 2 — Train & Embed
-
-```bash
+bash
 python main.py
-```
+This step:
 
-* Fine-tunes CLIP
-* Saves image and text embeddings
+Loads the MIMIC-CXR dataset
+Fine-tunes CLIP on image-text pairs
+Saves model to models/clip/fine_tuned/
+Generates and saves embeddings to data/embeddings/
+🔹 STEP 2 — Test Retrieval System
+Run the search engine to test retrieval capabilities:
 
-### Step 3 — Retrieval & Evaluation
-
-```bash
+bash
 python scripts/run_search_engine.py
+🔹 STEP 3 — Visualize Results
+Generate visual plots of retrieval results:
+
+bash
 python scripts/inference_plot.py
+🔹 STEP 4 — Export Results to CSV
+Save retrieval results for analysis:
+
+bash
 python scripts/inference_to_csv.py
-python scripts/eval_retrieval.py
-```
+Output file: results/inference_plots/inference_topk.csv
 
-### Step 4 — Full Pipeline
+🔹 STEP 5 — Run Full Inference Pipeline
+Execute the complete diagnosis pipeline:
 
-```bash
+bash
 python scripts/run_inference_pipeline.py
-```
+Note: Uses dummy_llm() by default — replace with Gemini AI API for production.
 
-> Uses `dummy_llm()` by default — replace with Gemini AI API
+🔹 STEP 6 — Launch Interactive Interface
+Start the Streamlit web application:
 
----
-
-## 🖼️ Streamlit Frontend
-
-```bash
+bash
 streamlit run app/app.py
-```
+🧰 One-Command Execution
+Run the entire pipeline with a single command:
 
-### Features
+bash
+chmod +x dev.sh
+./dev.sh
+Contents of dev.sh:
 
-* Upload an X-ray
-* Submit diagnostic queries
-* Retrieve matches
-* Generate report
+bash
+#!/bin/bash
 
-### Upcoming Enhancements
+echo "Step 1: Training CLIP and Saving Embeddings..."
+python main.py
 
-* ✅ Basic diagnosis generation
-* 🧪 ICD-10 Tagging
-* 🧪 Voice query input
+echo "Step 2: Running Search Engine..."
+python scripts/run_search_engine.py
 
----
+echo "Step 3: Plotting Inference..."
+python scripts/inference_plot.py
 
-## 📁 Project Structure
+echo "Step 4: Saving CSV Results..."
+python scripts/inference_to_csv.py
 
-```
+echo "Step 5: Evaluating Retrieval..."
+python scripts/eval_retrieval.py
+
+echo "Step 6: Running Full Inference Pipeline..."
+python scripts/run_inference_pipeline.py
+
+echo "✅ All steps completed!"
+📁 Project Structure
 medxpert/
-├── app/                        # Streamlit UI
-├── data/                       # Dataset & embeddings
-├── models/                     # Fine-tuned CLIP
-├── scripts/                    # Utility scripts
-├── llm_report_generation.py    # LLM integration
-├── main.py                     # CLIP training
-├── dev.sh                      # One-shot runner
-└── requirements.txt
-```
+│
+├── app/                          # Streamlit UI
+│   └── app.py                    # Web interface
+│
+├── data/                         # Dataset & embeddings
+│   └── embeddings/               # Stored vector representations
+│
+├── models/                       # Model storage
+│   └── clip/fine_tuned/          # Fine-tuned CLIP checkpoint
+│
+├── scripts/                      # Utility scripts
+│   ├── save_embeddings.py        # Embedding generator
+│   ├── run_search_engine.py      # Retrieval tester
+│   ├── inference_plot.py         # Visualization tool
+│   ├── inference_to_csv.py       # Result exporter
+│   ├── eval_retrieval.py         # Performance evaluator
+│   └── run_inference_pipeline.py # Full pipeline runner
+│
+├── llm_report_generation.py      # LLM integration module
+├── main.py                       # CLIP training & embedding
+├── dev.sh                        # One-shot runner
+├── requirements.txt              # Dependencies
+└── README.md                     # Documentation
+📊 Evaluation
+[Under Construction]
 
----
+The comprehensive evaluation of MedXpert will include:
 
-## 📬 Contact
+Retrieval performance metrics
+Report quality assessment
+Clinical usefulness study
+Comparative analysis with baseline systems
+🔜 Roadmap & Future Work
+Feature	Status
+CLIP fine-tuning + embeddings	✅ Done
+Image ↔ Text retrieval	✅ Done
+BLIP + LLM summarization	✅ Done
+Streamlit frontend	⚙️ In Progress
+Real LLM (Gemini) integration	⚙️ In Progress
+ICD-10 code tagging	🧪 Planned
+Voice query input	🧪 Planned
+Multi-modal medical datasets	🧪 Planned
+⚠️ Disclaimer
+MedXpert is a research prototype and not intended for clinical use. All diagnostic suggestions should be reviewed by qualified healthcare professionals.
 
-For issues, suggestions, or collaborations: open an issue on GitHub.
+📬 Contact
+For issues, suggestions, or collaborations, please open an issue on GitHub or contact the project maintainer.
 
-> ⚠️ **Disclaimer**: MedXpert is a research prototype and not intended for clinical use.
+🙏 Acknowledgements
+MIMIC-CXR dataset for training data
+OpenAI's CLIP architecture
+Salesforce's BLIP model
+Google's Gemini AI
