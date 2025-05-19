@@ -82,13 +82,14 @@ We used the **MIMIC-CXR** dataset of X-rays and clinical reports.
 
 ```mermaid
 flowchart TD
-    U[User Input<br>(X-ray or Query)] -->|Embed| CLIP[Fine-Tuned CLIP Encoder]
-    CLIP --> RETRIEVE[Similarity Search<br>(Top-K Retrieval)]
-    U --> BLIP[BLIP Caption Generator]
-    RETRIEVE --> LLM[Gemini AI]
+    U["User Input\n(X-ray or Query)"] -->|Embed| CLIP["Fine-Tuned CLIP Encoder"]
+    CLIP --> RETRIEVE["Similarity Search\n(Top-K Retrieval)"]
+    U --> BLIP["BLIP Caption Generator"]
+    RETRIEVE --> LLM["Gemini AI"]
     BLIP --> LLM
-    LLM --> REPORT[Structured Diagnosis Report]
-    REPORT --> UI[Streamlit Frontend]
+    LLM --> REPORT["Structured Diagnosis Report"]
+    REPORT --> UI["Streamlit Frontend"]
+
 ```
 
 ---

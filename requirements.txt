@@ -19,3 +19,4 @@ torchvision
 google-generativeai
 google-cloud-aiplatform
 clip
+python-dotenv
