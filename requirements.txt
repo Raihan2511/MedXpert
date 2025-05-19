@@ -15,3 +15,7 @@ numpy
 scikit-learn    
 pandas
 scipy
+torchvision
+google-generativeai
+google-cloud-aiplatform
+clip
