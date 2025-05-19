@@ -9,26 +9,45 @@ from transformers import CLIPModel, CLIPProcessor
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Load config
-with open("config/clip_config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+def load_config():
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(base_dir, "config", "clip_config.yaml")
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
 
-MODEL_PATH = config["training"]["save_path"]
-EMBED_DIR = config["embeddings"]["save_dir"]
-IMAGE_DIR = "data/processed/images"
+config = load_config()
+
+# Get absolute paths
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_DIR = os.path.join(base_dir, config["training"]["save_path"])
+BEST_MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pt")  # Path to your best model
+EMBED_DIR = os.path.join(base_dir, config["embeddings"]["save_dir"])
+IMAGE_DIR = os.path.join(base_dir, "data/processed/images")
 TOP_K = 5
 
-# Load raw text queries if available (e.g., from dataset)
-
-
-# Load model and processor
+# Load model + processor
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = CLIPModel.from_pretrained(MODEL_PATH).to(device)
-processor = CLIPProcessor.from_pretrained(MODEL_PATH)
-model.eval()
+
+# Load the base model architecture
+model = CLIPModel.from_pretrained(config["model"]["name"]).to(device)
+# Load your fine-tuned weights from best_model.pt
+checkpoint = torch.load(BEST_MODEL_PATH, map_location=device)
+if 'model_state_dict' in checkpoint:
+    model.load_state_dict(checkpoint['model_state_dict'])
+    print(f"Loaded model from epoch {checkpoint.get('epoch', 'unknown')} with validation accuracy: {checkpoint.get('val_acc_avg', 'unknown')}")
+else:
+    # Try direct loading if not in the expected format
+    model.load_state_dict(checkpoint)
+    print("Loaded model directly from checkpoint")
+
+model = model.eval()  # Set model to evaluation mode
+
+# Load the processor
+processor = CLIPProcessor.from_pretrained(config["model"]["name"])
 
 # Load embeddings
-text_feats = torch.load(f"{EMBED_DIR}/test_text.pt")
-image_feats = torch.load(f"{EMBED_DIR}/test_image.pt")
+text_feats = torch.load(os.path.join(EMBED_DIR, "test_text.pt"))
+image_feats = torch.load(os.path.join(EMBED_DIR, "test_image.pt"))
 
 # Load all test image paths
 test_image_paths = sorted([
@@ -64,9 +83,10 @@ def plot_topk(query_idx, save=False):
     plt.tight_layout()
 
     if save:
-        os.makedirs("results/inference_plots", exist_ok=True)
-        plt.savefig(f"results/inference_plots/query_{query_idx}.png")
-        print(f"✅ Saved to results/inference/plots/query_{query_idx}.png")
+        os.makedirs(os.path.join(base_dir, "results/inference_plots"), exist_ok=True)
+        save_path = os.path.join(base_dir, f"results/inference_plots/query_{query_idx}.png")
+        plt.savefig(save_path)
+        print(f"✅ Saved to {save_path}")
 
     plt.show()
 
@@ -74,4 +94,3 @@ def plot_topk(query_idx, save=False):
 # Example usage
 if __name__ == "__main__":
     plot_topk(query_idx=0, save=True)
-

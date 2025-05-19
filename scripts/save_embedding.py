@@ -1,117 +1,61 @@
-# # scripts/save_embeddings.py
-
-# import os
-# import yaml
-# import torch
-# from tqdm import tqdm
-# from datasets import load_dataset
-# from transformers import CLIPModel, CLIPProcessor
-# from torch.utils.data import DataLoader
-# import sys
-# sys.path.append(".")
-# from models.clip.dataset import MIMICCLIPDataset
-
-
-
-# # Load config
-# with open("config/clip_config.yaml", "r") as f:
-#     config = yaml.safe_load(f)
-
-# MODEL_PATH = config["training"]["save_path"]
-# DATASET_NAME = config["dataset"]["name"]
-# USE_FINDINGS = config["dataset"].get("use_findings_if_missing", True)
-# EMBED_DIR = config["embeddings"]["save_dir"]
-# BATCH_SIZE = config["training"]["batch_size"]
-# SPLITS = ["train", "validation", "test"]
-
-# os.makedirs(EMBED_DIR, exist_ok=True)
-
-# # Setup
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# model = CLIPModel.from_pretrained(MODEL_PATH).to(device)
-# processor = CLIPProcessor.from_pretrained(MODEL_PATH)
-# model.eval()
-
-# # Save features for each split
-# def encode_and_save(split_name):
-#     print(f"\n🔄 Encoding {split_name} split")
-#     dataset = load_dataset(DATASET_NAME, split=split_name)
-#     mimic_ds = MIMICCLIPDataset(dataset, processor)
-#     dataloader = DataLoader(mimic_ds, batch_size=BATCH_SIZE)
-
-#     image_embeds = []
-#     text_embeds = []
-
-#     for batch, _ in tqdm(dataloader):
-#         batch = {k: v.to(device) for k, v in batch.items()}
-#         with torch.no_grad():
-#             image_feat = model.get_image_features(batch["pixel_values"])
-#             text_feat = model.get_text_features(batch["input_ids"], attention_mask=batch["attention_mask"])
-
-#         image_embeds.append(image_feat.cpu())
-#         text_embeds.append(text_feat.cpu())
-
-#     torch.save(torch.cat(image_embeds), f"{EMBED_DIR}/{split_name}_image.pt")
-#     torch.save(torch.cat(text_embeds), f"{EMBED_DIR}/{split_name}_text.pt")
-#     print(f"✅ Saved embeddings to {EMBED_DIR}/{split_name}_*.pt")
-
-# if __name__ == "__main__":
-#     for split in SPLITS:
-#         encode_and_save(split)
-# scripts/save_embeddings.py
-
 import os
+import sys
 import yaml
 import torch
 from tqdm import tqdm
+from datasets import load_dataset
 from transformers import CLIPModel, CLIPProcessor
 from torch.utils.data import DataLoader
-import sys
-sys.path.append(".")
-from models.clip.dataset import MIMICCLIPDataset  # assumes project structure is correct
 
-# Load config
-with open("config/clip_config.yaml", "r") as f:
+# Add parent directory to path to find modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from models.clip.dataset import CLIPDataset
+
+# Load config file
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_dir = os.path.abspath(os.path.join(script_dir, ".."))
+config_path = os.path.join(project_dir, "config", "clip_config.yaml")
+
+if not os.path.exists(config_path):
+    raise FileNotFoundError(f"Config not found: {config_path}")
+
+with open(config_path, "r") as f:
     config = yaml.safe_load(f)
 
-DATA_DIR = config["dataset"]["root"]  # new: path to your /images and /texts folders
-MODEL_PATH = config["training"]["save_path"]
-EMBED_DIR = config["embeddings"]["save_dir"]
-BATCH_SIZE = config["training"]["batch_size"]
-SPLITS = ["train", "validation", "test"]
+EMBED_DIR = config["embeddings"].get("save_dir", "data/embeddings")
+BATCH_SIZE = config["training"].get("batch_size", 16)
 
-# Ensure output directory exists
 os.makedirs(EMBED_DIR, exist_ok=True)
 
-# Setup device and load model
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = CLIPModel.from_pretrained(MODEL_PATH).to(device)
-processor = CLIPProcessor.from_pretrained(MODEL_PATH)
-model.eval()
+def encode_and_save(model, processor, device, split_name: str, dataset):
+    print(f"\n🔄 Encoding {split_name} split")
+    mimic_ds = CLIPDataset(dataset)
 
-def encode_and_save(split):
-    print(f"\n🔄 Encoding '{split}' split")
-    dataset = MIMICCLIPDataset(DATA_DIR, split, processor)
-    dataloader = DataLoader(dataset, batch_size=BATCH_SIZE)
+    # Use the same collate_fn pattern as in main.py
+    def clip_collate_fn(batch):
+        images = [item["image"] for item in batch]
+        texts = [item["text"] for item in batch]
+        inputs = processor(text=texts, images=images, return_tensors="pt", padding=True, truncation=True)
+        return inputs
 
-    image_embeds, text_embeds = [], []
+    dataloader = DataLoader(mimic_ds, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, collate_fn=clip_collate_fn)
+    image_embeds = []
+    text_embeds = []
 
-    for batch in tqdm(dataloader, desc=f"Encoding {split}"):
+    for batch in tqdm(dataloader):
         batch = {k: v.to(device) for k, v in batch.items()}
         with torch.no_grad():
-            img_feat = model.get_image_features(batch["pixel_values"])
-            txt_feat = model.get_text_features(
-                input_ids=batch["input_ids"],
-                attention_mask=batch["attention_mask"]
-            )
-        image_embeds.append(img_feat.cpu())
-        text_embeds.append(txt_feat.cpu())
+            image_feat = model.get_image_features(pixel_values=batch["pixel_values"])
+            text_feat = model.get_text_features(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
 
-    torch.save(torch.cat(image_embeds), os.path.join(EMBED_DIR, f"{split}_image.pt"))
-    torch.save(torch.cat(text_embeds), os.path.join(EMBED_DIR, f"{split}_text.pt"))
-    print(f"✅ Saved: {split}_image.pt and {split}_text.pt")
+        image_embeds.append(image_feat.cpu())
+        text_embeds.append(text_feat.cpu())
 
-if __name__ == "__main__":
-    for split in SPLITS:
-        encode_and_save(split)
+    torch.save(torch.cat(image_embeds), os.path.join(EMBED_DIR, f"{split_name}_image.pt"))
+    torch.save(torch.cat(text_embeds), os.path.join(EMBED_DIR, f"{split_name}_text.pt"))
+    print(f"✅ Saved: {split_name}_image.pt and {split_name}_text.pt")
 
+def save_all_embeddings(model, processor, device, dataset_dict):
+    for split_name in ["train", "validation", "test"]:
+        if split_name in dataset_dict:
+            encode_and_save(model, processor, device, split_name, dataset_dict[split_name])

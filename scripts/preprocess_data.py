@@ -78,6 +78,31 @@ from tqdm import tqdm
 
 MIN_TEXT_LENGTH = 10  # Minimum length of text to consider valid
 
+# def filter_and_format(example):
+#     """
+#     Filter and format examples for CLIP dataset.
+    
+#     Args:
+#         example (dict): Input example with 'findings', 'impression', etc.
+        
+#     Returns:
+#         dict or None: Formatted example or None if invalid
+#     """
+#     # Use impression if available, otherwise findings
+#     text = example.get("impression") or example.get("findings")
+#     if not text or len(text.strip()) < MIN_TEXT_LENGTH:
+#         return None
+    
+#     # Make sure we have a valid image_id that matches the actual image filename
+#     image_id = example.get("image_id")
+#     if not image_id:
+#         return None
+    
+#     return {
+#         "image_id": image_id,
+#         "image_path": example.get("image_path"),  # Store the image path explicitly
+#         "text": text.strip().replace("\n", " ")
+#     }
 def filter_and_format(example):
     """
     Filter and format examples for CLIP dataset.
@@ -88,8 +113,8 @@ def filter_and_format(example):
     Returns:
         dict or None: Formatted example or None if invalid
     """
-    # Use impression if available, otherwise findings
-    text = example.get("impression") or example.get("findings")
+    # Only use impression (not findings)
+    text = example.get("impression")
     if not text or len(text.strip()) < MIN_TEXT_LENGTH:
         return None
     
@@ -103,7 +128,6 @@ def filter_and_format(example):
         "image_path": example.get("image_path"),  # Store the image path explicitly
         "text": text.strip().replace("\n", " ")
     }
-
 def preprocess_dataset(dataset, output_dir):
     """
     Preprocess dataset and save text/image data to disk.

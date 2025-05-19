@@ -8,18 +8,25 @@ from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Load config
-with open("config/clip_config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+def load_config():
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    config_path = os.path.join(base_dir, "config", "clip_config.yaml")
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
 
-MODEL_PATH = config["training"]["save_path"]
-EMBED_DIR = config["embeddings"]["save_dir"]
+config = load_config()
+
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MODEL_DIR = os.path.join(base_dir, config["training"]["save_path"])
+BEST_MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pt")  # Path to your best model
+EMBED_PATH = os.path.join(base_dir, config["embeddings"]["save_dir"])
 IMAGE_DIR = "data/processed/images"
 TOP_K = 5
 CSV_PATH = "results/inference_plots/inference_topk.csv"
 
 # Load embeddings
-text_feats = torch.load(f"{EMBED_DIR}/test_text.pt")
-image_feats = torch.load(f"{EMBED_DIR}/test_image.pt")
+text_feats = torch.load(f"{EMBED_PATH}/test_text.pt")
+image_feats = torch.load(f"{EMBED_PATH}/test_image.pt")
 
 # List image files
 test_image_paths = sorted([
