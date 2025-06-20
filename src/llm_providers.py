@@ -3,6 +3,7 @@
 import os
 import requests
 import google.generativeai as genai
+import streamlit as st
 
 # Load Gemini API key from environment or fallback
 # GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your_gemini_api_key_here")
@@ -13,7 +14,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Access the API key
-api_key = os.getenv("API_KEY")
+# api_key = os.getenv("API_KEY")
+api_key = st.secrets["api_keys"]["gemini"]
 
 # Use the API key
 
