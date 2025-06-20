@@ -1,5 +1,4 @@
-# 😺 MedXpert: Medical Visual QA & Diagnosis Assistant
-
+# 😺 MedXpert: A Multimodal Diagnosis Assistant for Radiology
 **MedXpert** is a full-stack AI system designed to support medical diagnosis using visual-language retrieval and automated report generation. It combines a **fine-tuned CLIP model** for image-text alignment, **BLIP** for medical image captioning, and **Gemini AI (LLM)** for structured diagnosis generation.
 
 ---
